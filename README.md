@@ -1,23 +1,13 @@
-# saferwall-cli
+# Saferwall CLI
 
-A CLI tool to interact with Saferwall.com to download samples, scan or re-scan new samples.
-
-## Install
-
-You can either download pre-built binaries or build the tool yourself.
-
-```sh
-
-go install github.com/saferwall/saferwall-cli
-
-```
+A CLI tool to use Saferwall to download samples, scan or re-scan new samples.
 
 ## Usage
 
 To use the CLI tool you need a [Saferwall](https://saferwall.com) account in order to authenticate
 yourself.
 
-The CLI tool reads your username and password from a local `.env` file.
+The CLI tool reads your username and password from a local ```.env``` file.
 
 ```sh
 
@@ -46,15 +36,15 @@ cli [re]scan /samples/putty.exe
 
 ```
 
-For the rest of the commands you can use `help` to show a usage guide.
+For the rest of the commands you can use ```help``` to show a usage guide.
 
 ```sh
 
 A cli tool to interfact with saferwall APIs (scan, rescan, upload, ...)
 
 Usage:
-  saferwall-cli [flags]
-  saferwall-cli [command]
+  sfwcli [flags]
+  sfwcli [command]
 
 Available Commands:
   download    Download file
@@ -65,6 +55,6 @@ Available Commands:
   version     Vesion number
 
 Flags:
-  -h, --help   help for saferwall-cli
+  -h, --help   help for sfwcli
 
 ```
