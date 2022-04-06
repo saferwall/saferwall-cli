@@ -5,22 +5,28 @@
 package cmd
 
 import (
+	"bytes"
+	"html/template"
 	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/saferwall/saferwall-cli/internal/entity"
+	"github.com/saferwall/saferwall-cli/internal/util"
 	"github.com/saferwall/saferwall-cli/internal/webapi"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
 
 // Used for flags.
-var corpusYaml string
+var (
+	souk string
+)
 
 func init() {
-	genCmd.Flags().StringVarP(&corpusYaml, "corpus", "c", "",
-		"Yaml corpus file (required)")
-	genCmd.MarkFlagRequired("corpus")
+	genCmd.Flags().StringVarP(&souk, "souk", "s", "../malware-souk",
+		"Points to the malware-souk git repo (default: ../malware-souk)")
 }
 
 func loadCorpus(filename string) {
@@ -47,8 +53,64 @@ func loadCorpus(filename string) {
 			if err != nil {
 				log.Fatalf("failed to read doc from saferwall web service: %v", err)
 			}
+
+			corpusFamily := filepath.Join(souk, "corpus", fam.Name)
+			if !util.Exists(corpusFamily) {
+				err = os.Mkdir(corpusFamily, 0755)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			err = generateMarkdown(fam, file)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			break
 		}
 	}
+}
+
+func generateMarkdown(fam entity.Family, file entity.File) error {
+	body := new(bytes.Buffer)
+
+	// render the markdown
+	famTemplate := filepath.Join("./templates", "family.md")
+	tpl, err := template.ParseFiles(famTemplate)
+	if err != nil {
+		return err
+	}
+
+	data := struct {
+		Fam  entity.Family
+		File entity.File
+	}{
+		fam,
+		file,
+	}
+
+	if err = tpl.Execute(body, data); err != nil {
+		return err
+	}
+
+	// create target family directory.
+	corpusFamilyPath := filepath.Join(souk, "corpus", fam.Name)
+	if !util.Exists(corpusFamilyPath) {
+		err = os.Mkdir(corpusFamilyPath, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	// write the family README.
+	corpusFamilyReadme := filepath.Join(corpusFamilyPath, "README.md")
+	_, err = util.WriteBytesFile(corpusFamilyReadme, body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var genCmd = &cobra.Command{
@@ -57,6 +119,8 @@ var genCmd = &cobra.Command{
 	Long: `Generates markdown source code for the entire corpus of
 saferwall's malware souk database`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		corpusYaml := filepath.Join(souk, "corpus.yaml")
 		loadCorpus(corpusYaml)
 	},
 }

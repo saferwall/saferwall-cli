@@ -36,9 +36,9 @@ const (
 var filePath string
 
 func init() {
-	genCmd.Flags().StringVarP(&filePath, "filePath", "f", "",
+	scanCmd.Flags().StringVarP(&filePath, "filePath", "f", "",
 		"File name or path to scan (required)")
-	genCmd.MarkFlagRequired("filePath")
+	scanCmd.MarkFlagRequired("filePath")
 }
 
 func loadEnv() (username, password string) {
@@ -116,6 +116,7 @@ func scanFile(filePath, token string, async, forceRescan bool) error {
 			})
 		}
 		wp.StopWait()
+		return nil
 	}
 
 	// Sequencially scan the files.
@@ -126,6 +127,8 @@ func scanFile(filePath, token string, async, forceRescan bool) error {
 			log.Fatalf("failed to read file: %v", filename)
 		}
 		sha256 := util.GetSha256(data)
+
+		log.Printf("processing %s", sha256)
 
 		// Check if we the file exists in the DB.
 		exists, err := webapi.FileExists(sha256, token)

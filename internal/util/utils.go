@@ -8,6 +8,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -51,4 +53,43 @@ func GetSha256(b []byte) string {
 	h := sha256.New()
 	h.Write(b)
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+// WriteBytesFile write Bytes to a File.
+func WriteBytesFile(filename string, r io.Reader) (int, error) {
+
+	// Open a new file for writing only
+	file, err := os.OpenFile(
+		filename,
+		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
+		0666,
+	)
+	if err != nil {
+		return 0, err
+	}
+	defer file.Close()
+
+	// Read for the reader bytes to file
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return 0, err
+	}
+
+	// Write bytes to disk
+	bytesWritten, err := file.Write(b)
+	if err != nil {
+		return 0, err
+	}
+
+	return bytesWritten, nil
+}
+
+// Exists reports whether the named file or directory exists.
+func Exists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
