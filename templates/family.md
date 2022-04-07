@@ -21,13 +21,18 @@
 
 ## Antivirus Scan
 
-| Vendors     | status | Vendors | status |
-| ----------- | ------ | ------- | ------ |
-| Avast       | {{ .File.MultiAV.last_scan.avast.output }} | FSecure | {{ .File.MultiAV.last_scan.fsecure.output }} |
-| Avira       | {{ .File.MultiAV.last_scan.avira.output }} | Kaspersky | {{ .File.MultiAV.last_scan.kaspersky.output }} |
-| Bitdefender | {{ .File.MultiAV.last_scan.bitdefender.output }} | McAfee | {{ .File.MultiAV.last_scan.mcafee.output }} |
-| ClamAV      | {{ .File.MultiAV.last_scan.clamav.output }} | Sophos | {{ .File.MultiAV.last_scan.sophos.output }} |
-| Comodo      | {{ .File.MultiAV.last_scan.comodo.output }} | Symantec | {{ .File.MultiAV.last_scan.symantec.output }} |
-| ESET        | {{ .File.MultiAV.last_scan.eset.output }} | Windows Defender | {{ .File.MultiAV.windefender.avast.output }} |
-| TrendMicro  | {{ .File.MultiAV.last_scan.trendmicro.output }} | DrWeb | {{ .File.MultiAV.last_scan.drweb.output }} |
+```diff
+{{- range $k, $v := .File.MultiAV.last_scan }}
+{{- if $v.output }}
+- {{ $k | title }}: {{ $v.output }}
+{{- else }}
++ {{ $k | title }}: clean
+{{- end }}
+{{- end }}
+```
 
+## References
+
+{{- range .Fam.References }}
+- [{{ . }}]({{ . }})
+{{- end }}

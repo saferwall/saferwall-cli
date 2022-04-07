@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Masterminds/sprig"
+
 	"github.com/saferwall/saferwall-cli/internal/entity"
 	"github.com/saferwall/saferwall-cli/internal/util"
 	"github.com/saferwall/saferwall-cli/internal/webapi"
@@ -43,6 +45,7 @@ func loadCorpus(filename string) {
 
 	for _, fam := range corpus.Families {
 		log.Printf("processing %s", fam.Name)
+
 		for _, sample := range fam.Samples {
 			var file entity.File
 
@@ -77,10 +80,9 @@ func generateMarkdown(fam entity.Family, file entity.File) error {
 
 	// render the markdown
 	famTemplate := filepath.Join("./templates", "family.md")
-	tpl, err := template.ParseFiles(famTemplate)
-	if err != nil {
-		return err
-	}
+
+	tpl := template.Must(
+		template.New("family.md").Funcs(sprig.FuncMap()).ParseFiles(famTemplate))
 
 	data := struct {
 		Fam  entity.Family
@@ -90,14 +92,14 @@ func generateMarkdown(fam entity.Family, file entity.File) error {
 		file,
 	}
 
-	if err = tpl.Execute(body, data); err != nil {
+	if err := tpl.Execute(body, data); err != nil {
 		return err
 	}
 
 	// create target family directory.
 	corpusFamilyPath := filepath.Join(souk, "corpus", fam.Name)
 	if !util.Exists(corpusFamilyPath) {
-		err = os.Mkdir(corpusFamilyPath, 0755)
+		err := os.Mkdir(corpusFamilyPath, 0755)
 		if err != nil {
 			return err
 		}
@@ -105,7 +107,7 @@ func generateMarkdown(fam entity.Family, file entity.File) error {
 
 	// write the family README.
 	corpusFamilyReadme := filepath.Join(corpusFamilyPath, "README.md")
-	_, err = util.WriteBytesFile(corpusFamilyReadme, body)
+	_, err := util.WriteBytesFile(corpusFamilyReadme, body)
 	if err != nil {
 		return err
 	}
