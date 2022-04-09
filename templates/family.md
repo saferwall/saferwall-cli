@@ -1,7 +1,11 @@
 # BlackCat
 
 * First seen: {{ .Fam.FirstSeen }}
-* Aliases: {{ range .Fam.Aliases }}{{ . }}, {{ end }}
+* Aliases: {{$aliases := .Fam.Aliases}}
+{{- range .Fam.Aliases }}
+{{ . }}
+{{- if ne . ($aliases | last) }}, {{- end }}
+{{- end }}
 
 
 ## Basic Properties
