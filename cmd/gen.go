@@ -46,6 +46,15 @@ func loadCorpus(filename string) {
 	for _, fam := range corpus.Families {
 		log.Printf("processing %s", fam.Name)
 
+		corpusFamily := filepath.Join(souk, "corpus", fam.Name)
+		if !util.Exists(corpusFamily) {
+			err = os.Mkdir(corpusFamily, 0755)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		files := map[string]entity.File{}
 		for _, sample := range fam.Samples {
 			var file entity.File
 
@@ -57,25 +66,18 @@ func loadCorpus(filename string) {
 				log.Fatalf("failed to read doc from saferwall web service: %v", err)
 			}
 
-			corpusFamily := filepath.Join(souk, "corpus", fam.Name)
-			if !util.Exists(corpusFamily) {
-				err = os.Mkdir(corpusFamily, 0755)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
+			files[sample.SHA256] = file
+		}
 
-			err = generateMarkdown(fam, file)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			break
+		// generate markdown for family.
+		err = generateMarkdown(fam, files)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 }
 
-func generateMarkdown(fam entity.Family, file entity.File) error {
+func generateMarkdown(fam entity.Family, files map[string]entity.File) error {
 	body := new(bytes.Buffer)
 
 	// render the markdown
@@ -85,11 +87,11 @@ func generateMarkdown(fam entity.Family, file entity.File) error {
 		template.New("family.md").Funcs(sprig.FuncMap()).ParseFiles(famTemplate))
 
 	data := struct {
-		Fam  entity.Family
-		File entity.File
+		Fam   entity.Family
+		Files map[string]entity.File
 	}{
 		fam,
-		file,
+		files,
 	}
 
 	if err := tpl.Execute(body, data); err != nil {
